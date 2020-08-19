@@ -7,17 +7,16 @@ class App(QtWidgets.QMainWindow):
 
     def __init__(self, board):
         super().__init__()
-        self.title = 'Sudoku using PyQt5 by Bruno Thuma'
         self.left = 560
         self.top = 140
         self.width = 800
         self.height = 800
-        self.mapToTextGrid = [[] for x in range(10)]
         self.board = list(board)
+        self.mapToTextGrid = [[] for x in range(len(board))]
         self.initUI()
     
     def initUI(self):
-        self.setWindowTitle(self.title)
+        self.setWindowTitle('Sudoku using PyQt5 by Bruno Thuma')
         self.setGeometry(self.left, self.top, self.width, self.height)
     
         self.textGrid()
@@ -25,15 +24,16 @@ class App(QtWidgets.QMainWindow):
 
         self.draw()
 
-    def verRow(self, textBox):
+    def verTxtBoxRow(self, textBox):
         n = -1
         for row in self.mapToTextGrid:
             if textBox in row:
-                n = row.index(textBox)
+                n = mapToTextGrid.index(row)
+                break
 
         if n == -1:
             return "textBox not found on textGrid"
-        # If there are any 0's return message of ampty tile
+        # If there are any 0's return message of empty tile
         if not all(self.board[n]):
             return "row still got empty places"
         # If length of array(can repeat values) is greater than
@@ -42,11 +42,98 @@ class App(QtWidgets.QMainWindow):
         if len(self.board[n]) > len(set(self.board[n])):
             return "duplicated values in row"
         return "OK"
+    
+    def verTxtBoxCol(self, textBox):
+        n = -1
+        for row in self.mapToTextGrid:
+            if textBox in row:
+                n = row.index(textBox)
+                break
+
+        if n == -1:
+            return "textBox not found on textGrid"
+        temp = [i[position] for i in self.board]
+        # If there are any 0's return message of empty tile
+        if not all(temp):
+            return "Col still got empty places"
+        # If length of array(can repeat values) is greater than
+        # length of set(doesnt repeat values) return duplicated 
+        # values message
+        if len(temp) > len(set(temp)):
+            return "Repeated values on col"
+        return "Ok"
+
+    def verTxtBoxSquare(self, textBox):
+        xPos = -1
+        for row in self.mapToTextGrid:
+            if textBox in row:
+                xPos = row.index(textBox)
+                yPos = self.mapToTextGrid.index(row)
+                break
+
+        if xPos == -1:
+            return "textBox not found on textGrid"
+        temp = [
+            self.board[row + (yPos - yPos%3)][col + (xPos - xPos%3)]
+            for row in range(3)
+            for col in range(3)
+        ]
+        print(temp)
+        # If there are any 0's return message of empty tile
+        if not all(temp):
+            return False
+        # If length of array(can repeat values) is greater than
+        # length of set(doesnt repeat values) return duplicated 
+        # values message
+        if len(temp) > len(set(temp)):
+            return False
+        return True
+    
+    def verPosRow(self, position):
+        temp = self.board[position]
+        print("Row ", temp)
+        while 0 in temp:
+            temp.remove(0)
+        # If length of array(can repeat values) is greater than
+        # length of set(doesnt repeat values) return duplicated 
+        # values message
+        if len(temp) > len(set(temp)):
+            return False
+        return True
+    
+    def verPosCol(self, position):
+        temp = [i[position] for i in self.board]
+        print("Col ",temp)
+        while 0 in temp:
+            temp.remove(0)
+        # If length of array(can repeat values) is greater than
+        # length of set(doesnt repeat values) return duplicated 
+        # values message
+        while 0 in temp:
+            temp.remove(0)
+        if len(temp) > len(set(temp)):
+            return False
+        return True
+
+    def verPosSquare(self, xPos, yPos):
+        temp = [
+            self.board[row + (yPos - yPos%3)][col + (xPos - xPos%3)]
+            for row in range(3)
+            for col in range(3)
+        ]
+        print("Square ",temp)
+        while 0 in temp:
+            temp.remove(0)
+        # If length of array(can repeat values) is greater than
+        # length of set(doesnt repeat values) return duplicated 
+        # values message
+        if len(temp) > len(set(temp)):
+            return False
+        return True
 
     # Fill the textBoxes of the window 
     # with the values on the self.board matrix
     def fillValues(self):
-        print("debug")
         for row in range(len(self.board)):
             for col in range(len(self.board)):
                 value = self.board[row][col]
@@ -57,7 +144,6 @@ class App(QtWidgets.QMainWindow):
 
     # Same as self.fillValues() but set the non-0 tiles as read-only
     def fillInitialValues(self):
-        print("debug")
         for row in range(len(self.board)):
             for col in range(len(self.board)):
                 value = self.board[row][col]
@@ -65,25 +151,23 @@ class App(QtWidgets.QMainWindow):
                     self.mapToTextGrid[row][col].setText(str(value))
                     self.mapToTextGrid[row][col].setReadOnly(True)
         self.draw()
+        print("len(self.board) ", len(self.board))
+        print("len(self.mapToTextGrid) ", len(self.mapToTextGrid))
+        print("initialValues OK")
         return
     
     def readTextGrid(self):
         result = []
-        print("len(self.mapToTextGrid) ", len(self.mapToTextGrid))
         for row in range(len(self.mapToTextGrid)):
             result.append([])
-            print(f"len(self.mapToTextGrid[{row}]) ", len(self.mapToTextGrid[row]))
             for col in range(len(self.mapToTextGrid)):
-                print("row, col", row, col)
                 textBox = self.mapToTextGrid[row][col]
                 if textBox.text() != '':
-                    # self.board[row][col] = int(textBox.text())
                     result[row].append(int(textBox.text()))
-                    print(textBox.text())
                 else:
                     result[row].append(0)
         if len(result) < 9 or len(result[0]) < 9:
-            print("erro no read")
+            print("error reading GUI")
         return result
 
 
@@ -131,7 +215,7 @@ class App(QtWidgets.QMainWindow):
         self.button.move(400,760)
 
         # Create a button in the window
-        self.button2 = QtWidgets.QPushButton('Button 2', self)
+        self.button2 = QtWidgets.QPushButton('Verify Row', self)
         self.button2.move(300,760)
         
         # Connect button to function changeBgRed
@@ -163,8 +247,9 @@ class App(QtWidgets.QMainWindow):
     
     @QtCore.pyqtSlot()
     def verify(self):
-        self.readTextGrid()
-        self.popupMessage(self.verRow(self.mapToTextGrid[0][0]))
+        self.board = self.readTextGrid()
+        # self.popupMessage("".join([self.verTxtBoxRow(self.mapToTextGrid[i][0]) for i in range(len(self.board))]))
+        self.popupMessage(str(self.verPosSquare(4, 4) and self.verPosCol(4) and self.verPosRow(4)))
     
 
 # initialBoard = [[0 for i in range(10)] for i in range(10)]
